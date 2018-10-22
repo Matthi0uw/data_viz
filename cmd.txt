@@ -1,0 +1,160 @@
+D:\Dev\elasticsearch-5.5.3\elasticsearch-5.5.3>.\bin\elasticsearch.bat
+
+
+D:\Dev\logstash-5.5.3\logstash-5.5.3>.\bin\logstash -f .\log_vizeo_viz.conf
+
+
+http://localhost:9200/viseo3/_search?pretty=true
+{
+  "query":{
+    "match":{
+      "code_pays":"BE"
+    }
+  },
+  "aggs":{
+    "valeurtotale":{
+      "sum":{
+        "field":"valeur"
+      }
+    }
+  }
+}
+
+
+{
+  "aggs":{
+    "group_by_pays": {
+      "terms": {
+        "field": "année"
+      },
+      "aggs": {
+        "valeurtotale":{
+          "sum":{
+            "field":"valeur"
+          }
+        }
+      }
+    }
+  }
+}
+
+
+maxi query :
+ajouter la taille pour + de 10
+{
+  "aggs":{
+    "group_by_flux": {
+      "terms": {"size":2,"field":"flux"},
+      "aggs": {
+        "group_by_year": {
+          "terms": {"size":10,"field": "année"},
+          "aggs": {
+            "group_by_month": {
+              "terms": {"size":12,"field": "mois"},
+              "aggs":{
+                "group_by_pays": {
+                  "terms": {"size":300,"field":"code_pays"},
+                  "aggs":{
+                    "group_by_category": {
+                      "terms": {"size":100,"field":"code_A129"},
+                      "aggs": {
+                        "valeurtotale":{
+                          "sum":{
+                            "field":"valeur"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+
+{
+  "query" : {
+    "constant_score" : { 
+      "filter" : {
+        "bool" : {
+          "must" : [
+            { "term" : {"flux" : "e"}},
+            { "term" : {"mois" : 2}},
+            { "term" : {"année" : 2016}}
+          ]
+        }
+      }
+    }
+  },
+  "aggs":{
+    "group_by_flux": {
+      "terms": {"size":2,"field":"flux"},
+      "aggs": {
+        "group_by_year": {
+          "terms": {"size":10,"field": "année"},
+          "aggs":{
+            "group_by_pays": {
+              "terms": {"size":300,"field":"code_pays"},
+              "aggs":{
+                "group_by_category": {
+                  "terms": {"size":100,"field":"code_A129"},
+                  "aggs": {
+                    "valeurtotale":{
+                      "sum":{"field":"valeur"}
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+_search?size=4&filter_path=aggregations.group_by_flux.buckets.key,aggregations.group_by_flux.buckets.group_by_year.buckets.key,aggregations.group_by_flux.buckets.group_by_year.buckets.group_by_pays.buckets.key,aggregations.group_by_flux.buckets.group_by_year.buckets.group_by_pays.buckets.group_by_category.buckets.key,aggregations.group_by_flux.buckets.group_by_year.buckets.group_by_pays.buckets.group_by_category.buckets.valeurtotale.value
+
+{
+  "query" : {
+    "constant_score" : { 
+      "filter" : {
+        "bool" : {
+          "must" : [
+            { "term" : {"flux" : "e"}}
+          ]
+        }
+      }
+    }
+  },
+  "aggs":{
+    "group_by_flux": {
+      "terms": {"size":2,"field":"flux"},
+      "aggs": {
+        "group_by_year": {
+          "terms": {"size":10,"field": "année"},
+          "aggs":{
+            "group_by_pays": {
+              "terms": {"size":300,"field":"code_pays"},
+              "aggs":{
+                "group_by_category": {
+                  "terms": {"size":100,"field":"code_A129"},
+                  "aggs": {
+                    "valeurtotale":{
+                      "sum":{"field":"valeur"}
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

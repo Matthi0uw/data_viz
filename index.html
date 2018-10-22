@@ -1,0 +1,43 @@
+<script src="./d3.v5.min.js"></script>
+
+<script>
+	async function main() {
+		dataImport = await d3.json("./import_m.json");
+		dataExport = await d3.json("./export_m.json");
+		fullData = [dataImport.aggregations.byflux.buckets[0], dataExport.aggregations.byflux.buckets[0]];
+		linksFromCenter = [];
+		linksFromCategory = [];
+		fullData.forEach(flux => {
+			flux.byyear.buckets.forEach((year, indexYear) => {
+				year.bypays.buckets.forEach((pays, indexPays) => {
+					pays.bycat.buckets.forEach((cat, indexCat) => {
+						linksFromCenter.push({
+							"source": "center",
+							"target": cat.key,
+							
+							"pays": pays.key,
+							"value": cat.sum.value,
+							"category": cat.key,
+							"year": year.key,
+							"flux": flux.key,
+						});
+						linksFromCategory.push({
+							"source": cat.key,
+							"target": pays.key,
+							
+							"pays": pays.key,
+							"value": cat.sum.value,
+							"category": cat.key,
+							"year": year.key,
+							"flux": flux.key,
+						});
+					});
+				});
+			});
+		});
+		targets = linksFromCenter.map(link => link.target);
+		console.log(targets.filter((target, pos) => targets.indexOf(target) === pos));
+		console.log(linksFromCenter);
+	}
+	main();
+</script>

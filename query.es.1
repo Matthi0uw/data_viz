@@ -1,0 +1,40 @@
+_search?size=4&filter_path=aggregations.byflux.buckets.key,aggregations.byflux.buckets.byyear.buckets.key,aggregations.byflux.buckets.byyear.buckets.bypays.buckets.key,aggregations.byflux.buckets.byyear.buckets.bypays.buckets.bycat.buckets.key,aggregations.byflux.buckets.byyear.buckets.bypays.buckets.bycat.buckets.sum.value
+
+{
+  "query" : {
+    "constant_score" : { 
+      "filter" : {
+        "bool" : {
+          "must" : [
+            { "term" : {"flux" : "e"}}
+          ]
+        }
+      }
+    }
+  },
+  "aggs":{
+    "byflux": {
+      "terms": {"size":2,"field":"flux"},
+      "aggs": {
+        "byyear": {
+          "terms": {"size":10,"field": "année"},
+          "aggs":{
+            "bypays": {
+              "terms": {"size":300,"field":"code_pays"},
+              "aggs":{
+                "bycat": {
+                  "terms": {"size":100,"field":"code_A129"},
+                  "aggs": {
+                    "sum":{
+                      "sum":{"field":"valeur"}
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
